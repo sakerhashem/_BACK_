@@ -1,7 +1,7 @@
 
 const X = require('express');
 const APP = X();
-const PORT = 2101;
+const PORT = 2100;
 // const PORT2 = 9999;
 // const CORS = require('cors');
 // const bodyParser = require('body-parser'); // needed?
@@ -16,6 +16,9 @@ const PORT = 2101;
 
 APP.use('/project1', X.static(__dirname + '/_SITE_/'));
 APP.use('/project2', X.static(__dirname + '/_P2_/'));
+
+APP.use('/students', (req,res) => {res.send(["Filidgfdfd","Jomekekeke"])});
+
 APP.listen(PORT, () => {
   	console.log(`\r\nNODE ::: I started my back end server on port ${PORT}.\r\n`);
   });
@@ -32,6 +35,26 @@ APP.listen(PORT, () => {
 //     {antwoord:`you sent ${arg} as argument`}
 //   );
 // })
+
+  // const mysql = require('mysql');
+  // let con = mysql.createConnection({
+  //   host: "localhost",
+  //   user: "root",
+  //   password: "mysql",
+  //   database: "grade_rating"
+  // });
+  // con.connect(function (err) {
+  //   if (err) throw err;
+  //   con.query("select stu_voornaam, stu_naam, vak_naam, (100-sum(fou_minpunten)) as totaal from studenten s 
+  //             inner join stu_vak_fou stf on s.stu_id = stf.fk_stu_id inner join fouten f on stf.fk_fou_id = f.fou_id 
+  //             inner join vakken v on stf.fk_vak_id = v.vak_id 
+  //             group by stu_voornaam, stu_naam, vak_naam 
+  //             order by stu_naam;",  (err, result, fields) =>{
+  //     if (err) {throw err;}
+  //     console.log("pre"+JSON.stringify(result)+"post");
+  //   });
+  // });
+
 
 // const mysql = require('mysql');
 // let con = mysql.createConnection({
