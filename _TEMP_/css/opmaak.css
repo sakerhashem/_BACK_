@@ -1,0 +1,155 @@
+/* css bij tabel */
+
+* {
+    box-sizing: border-box;
+}
+
+body{
+    width: 1000px;
+    margin: 0 auto;
+    font-family: Helvetica, sans-serif;
+    font-size: 14px;
+}
+
+table{
+    margin: 5em auto 0;
+}
+
+table,
+thead,
+td {
+    border: 1px solid #111;
+    border-collapse: collapse;
+}
+
+
+tr.student td{
+    padding: 1em;
+}
+
+
+thead #result {
+    padding: .5em 1em;
+}
+
+
+
+thead,
+thead tr {
+    height: fit-content;
+}
+thead tr td {
+    /* height: fit-content; */
+    position: relative;
+}
+
+
+
+thead tr td div p { display: block; }
+
+table thead td#cornerLU{
+    border-top: 1px solid #FFF;
+    border-left: 1px solid #FFF;
+}
+
+.rotate {
+    /* transform-origin: bottom left; */
+    /* Safari */
+    -webkit-transform: rotate(-90deg);
+    
+    /* Firefox */
+    -moz-transform: rotate(-90deg);
+    
+    /* IE */
+    -ms-transform: rotate(-90deg);
+    
+    /* Opera */
+    -o-transform: rotate(-90deg);
+    
+    /* Internet Explorer */
+    filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
+
+    }
+
+.custom-select select{
+    overflow:hidden;
+    font-weight: bold;
+    font-size: 14px;
+    height: 50px;
+    padding: 5px; /* If you add too much padding here, the options won't show in IE */
+    width: 150px;
+    border: none;
+    margin-top: 41px;
+}
+    
+/* --------- KLEUR fouten -------- */
+table,
+thead,
+td {
+    border: 2px dotted #FFF;
+}
+
+
+.fouten{
+    background: #dce7df;
+    padding: 0;
+    overflow: visible;
+    max-width: 50px;
+}
+
+p{
+    color: rgb(7, 77, 33);
+}
+
+#result{
+    background: #dce7df;
+    font-weight: bold;
+    /* box-shadow: inset 0px 0px 20px 0px rgba(23, 83, 46, 0.3); */
+}
+
+p{
+    font-weight: bold;
+}
+
+.student:hover{
+    background: rgb(66, 141, 91);
+    color: white;
+}
+
+td:last-of-type{
+    padding: 0 10px;
+    border: 1px dotted white;
+}
+
+tr:nth-child(even){
+    background: #dce7df;
+    padding: 0 10px;
+    border: 1px dotted white;
+}
+
+#cornerLU{
+background: none;
+padding-bottom: 0px;
+border-bottom: 2px dotted #FFF;
+}
+
+.custom-select select{
+    background: #dce7df;
+}
+
+select option{
+    background: white;
+}
+
+
+input[type="checkbox" i] {
+    margin: 0px;
+}
+
+tr.student td {
+    padding: 1.7em 1.5em 1.1em 1.6em;
+}
+
+input[type=checkbox]{
+    background: greenyellow;
+}

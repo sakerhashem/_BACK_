@@ -21,8 +21,8 @@
 //   return length;
 // }
 
-let g = $.get( "http://localhost:2105/students", function( data ) {
-  // $( ".result" ).html( data );
+let students = $.get( "http://localhost:2105/students", ( res ) {
+  $( "#studs" ).html( res );
   alert( data );
 });
   // alert(JSON.stringify(g));

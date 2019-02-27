@@ -1,1 +1,306 @@
-[{naam:"Filiberke"}]
+<!DOCTYPE html>
+<html>
+    <head>
+        <link href="css/opmaak.css" rel="stylesheet">
+        <meta charset="utf-8">
+        <title>Puntentabel</title>
+    </head>
+    <body>
+
+        
+    <div id="test">
+            
+    </div>
+
+    
+    
+    </body>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script>
+    let vakId = 0;
+    let selected = "";
+    let myObj;
+    let i;
+    let ii;
+    let iii;
+    let array_checks = Array();
+    let array_vakken = Array();
+    let array_fouten = Array();
+    let array_students = Array();
+    let checked = "";
+    function tablechecks(){
+        let xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+            // Typical action to be performed when the document is ready:
+                let x = JSON.parse(this.responseText);
+                myObj = JSON.parse(x);
+                for (check in myObj) {
+                    array_checks.push(myObj[check]);
+                }
+                tableVakken();
+            }
+        }
+        xhttp.open("GET", "http://localhost:2100/checks", true);
+        xhttp.send();
+    }
+    function tableVakken(){
+        let xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+            // Typical action to be performed when the document is ready:
+                let x = JSON.parse(this.responseText);
+                myObj = JSON.parse(x);
+                for (vak in myObj) {
+                    array_vakken.push(myObj[vak]);
+                    
+                }
+                tableFouten();
+            }
+        }
+        xhttp.open("GET", "http://localhost:2100/vakken", true);
+        xhttp.send();
+    } // end function tableVakken
+    function tableFouten(){
+        let xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+            // Typical action to be performed when the document is ready:
+                let x = JSON.parse(this.responseText);
+                myObj = JSON.parse(x);
+                for (fout in myObj) {
+                    array_fouten.push(myObj[fout]);
+                }
+                tableStudenten(callbackFouten);
+            }
+        }
+        xhttp.open("GET", "http://localhost:2100/fouten", true);
+        xhttp.send();
+    } // end function tableFouten
+    function tableStudenten(callback){
+        let xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+            // Typical action to be performed when the document is ready:
+                let x = JSON.parse(this.responseText);
+                myObj = JSON.parse(x);
+                for (student in myObj) {
+                    array_students.push(myObj[student]);
+                }
+                callback(array_fouten);
+            }
+        }
+        xhttp.open("GET", "http://localhost:2100/students", true);
+        xhttp.send();
+    } // end function tableStudenten
+    function callbackFouten(x){
+        let table = 
+        '<table id="puntentabel">'+
+        '<button onclick="addCol()" id="addcol">add column</button>'+
+        '<button onclick="remCol()" id="remcol">remove column</button>'+
+        '<button onclick="addRow()" id="addrow">add student</button>'+
+        '<thead>'+
+        '<td id="cornerLU">'+
+        '<div class="custom-select">'+
+        '<select id="rounded">'+
+        '<option value="0">Select Course</option>';
+        for (i=0;i<array_vakken.length;i++){
+            if (i+1==vakId){ selected = "selected"; }
+            table += '<option '+ selected +' value="'+ (array_vakken[i].vak_id) +'">'+ array_vakken[i].vak_naam +'</option>';
+            selected = "";
+        }
+        table += 
+                '</select>'+
+                '</div>'+
+                '</td>';
+        for (i=0;i<array_fouten.length;i++){
+            table += '<td class="fouten"><div class="rotate"><p>'+ array_fouten[i].fou_omschrijving +'</p></div></td>';
+        }
+        table += 
+                '<td id="result">Result</td>'+
+                '</thead>';
+        for (i=0;i<array_students.length;i++){
+            table += 
+                '<tr class="student"><td>'+ array_students[i].stu_voornaam +' '+ array_students[i].stu_naam +'</td>';
+            for (ii=0; ii<array_fouten.length; ii++){
+                for (iii=0; iii<array_checks.length;iii++){
+                    let foutNaam = array_checks[iii].fou_omschrijving;
+                    let vakNaam = array_checks[iii].vak_naam;
+                    let vak_id = array_checks[iii].vak_id;
+                    let stuVnaam = array_checks[iii].stu_voornaam;
+                    let stuAnaam = array_checks[iii].stu_naam;
+                    // console.log(vakNaam, vakId);
+                    if (vak_id == vakId){
+                        if (array_students[i].stu_voornaam == stuVnaam && 
+                        array_students[i].stu_naam == stuAnaam && 
+                        array_fouten[ii].fou_omschrijving == foutNaam){
+                            // console.log(stuVnaam,stuAnaam,foutNaam,vakNaam);
+                            checked = "checked";
+                        }
+                    }
+                } // check if checkbox data is in database
+                table += '<td><input '+ checked +' class="checkbox" type="checkbox" name="'+ array_students[i].stu_voornaam + '-' + array_students[i].stu_naam +'" value="'+ array_fouten[ii].fou_omschrijving +'"></td>';
+                checked = "";
+            }
+            table += '<td id="'+ array_students[i].stu_voornaam + array_students[i].stu_naam + '"></td></tr>';
+        }
+        table += '</table>';
+        document.getElementById("test").innerHTML = table;
+        table = "";
+        calcScore();        
+        array_checks = Array();
+        array_fouten = Array();
+        array_students = Array();
+        array_vakken = Array(); // empty arrays
+    }; // end callback fouten 
+    function calcScore(){
+        // vakId
+        // console.log("score");
+        // $("#Student1").text("100%");
+        let myobj = { vak: vakId };
+        let myjson = JSON.stringify(myobj);
+        $.ajax({
+            url: "/score",
+            type: "POST",
+            dataType: "JSON",
+            data: myjson,
+            success: (result, status)=>{
+                // console.dir("result: " + result + " status: " + status);
+                let rresult = JSON.stringify(result);
+                for (i=0;i<result.length;i++){
+                    console.log(result[i]);
+                    let vnaam = result[i].stu_voornaam;
+                    let anaam = result[i].stu_naam;
+                    let score = result[i].minpunten;
+                    $("#"+vnaam+anaam).text(score);
+                }
+            },
+            error: (error)=>{
+                
+                callData(); // reconstruct table after updating db
+            } 
+        }) // end $.ajax
+    }
+        
+    function callData(){
+        tablechecks();
+    }
+    callData();
+    $(document).on("change", "#rounded", function(){
+        vakId = $(this).val();
+        callData();
+    })
+        
+    function remCol(){
+        let fout = prompt("Geef een foutnaam die je wilt verwijderen.");
+        let myobj = { remove: fout };
+        let myjson = JSON.stringify(myobj);
+        $.ajax({
+            url: "/sql",
+            type: "POST",
+            dataType: "JSON",
+            data: myjson,
+            success: (result, status)=>{
+                console.dir("result: " + result + " status: " + status)
+            },
+            error: (error)=>{
+                let test = JSON.stringify(error);
+                console.dir("error: " + test);
+                callData(); // reconstruct table after updating db
+            } 
+        }) // end $.ajax
+    } // end function remCol
+        
+    function addCol(){
+        let fout = prompt("Geef een nieuwe foutnaam.");
+        let myobj = { foutnaam: fout };
+        let myjson = JSON.stringify(myobj);
+        $.ajax({
+            url: "/sql",
+            type: "POST",
+            dataType: "JSON",
+            data: myjson,
+            success: (result, status)=>{
+                console.dir("result: " + result + " status: " + status);
+            },
+            error: (error)=>{
+                let test = JSON.stringify(error);
+                // console.dir("error: " + test);
+                if (error.responseText != ""){
+                    alert(error.responseText);
+                }
+                callData(); // reconstruct table after updating db
+            } 
+        }) // end $.ajax
+    } // end function add col
+
+    function addRow() {
+        let firstName = prompt("Voornaam student:");
+        let lastName = prompt("Naam:");
+        let myObjFirst = { stuVnaam: firstName };
+        let myObjLast = { stuAnaam: lastName };
+        console.log(myObjFirst);
+        console.log(myObjLast);
+        let myjsonFirst = JSON.stringify(myObjFirst);
+        let myjsonLast = JSON.stringify(myObjLast);
+        console.log(myjsonFirst);
+        var xhttp = new XMLHttpRequest();
+        console.log(xhttp);
+        xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            console.log(this.responseText);
+            
+            }
+        };
+        xhttp.open("GET", "http://localhost:2100/addStudent", true);
+        xhttp.send();
+    }
+
+    $(document).on("click", "input[type=checkbox]", function(){
+        if (this.checked){
+            let name = this.name;
+            let val = this.value;
+            if (vakId == 0) alert("Selecteer een vak aub.");
+            let myObj = { checked: "true", name: this.name, val: this.value, vak: vakId };
+            let myJson = JSON.stringify(myObj);
+            $.ajax({
+                url: "/check",
+                type: "POST",
+                dataType: "JSON",
+                data: myJson,
+                success: (result, status) => {
+                    console.dir("result: " + result + " status: " + status);
+                },
+                error: (error)=>{
+                    let test = JSON.stringify(error);
+                    console.dir("error: " + test);
+                    if (error.responseText != ""){
+                    alert(error.responseText);
+                }
+                }
+            })
+            calcScore();
+        } // end if checked 
+        if (!this.checked){
+            let name = this.name;
+            let val = this.value;
+            let myObj = { checked: "false", name: this.name, val: this.value, vak: vakId };
+            let myJson = JSON.stringify(myObj);
+            $.ajax({
+                url: "/check",
+                type: "POST",
+                dataType: "JSON",
+                data: myJson,
+                success: (result, status) => {
+                    console.dir("result: " + result + " status: " + status);
+                },
+                error: (error)=>{
+                    let test = JSON.stringify(error);
+                    console.dir("error: " + test);
+                }
+            })
+            calcScore();
+        }
+    }); // end function input onclick
+    </script>
+</html>
