@@ -1,36 +1,36 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-  <meta charset="utf-8">
+    <meta charset="utf-8">
 
     <!-- scripts -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script src="sequencer.js"></script>
 </head>
 <body>
-    <h1>
-        <div id="print"></div>
-    </h1>
+<div id="holder">
+
+</div>
 <script>
+    let x = new sequencer();
 
-// function stringLength(s) {
-//   let length = 0;
-//   while (s[length] !== undefined)
-//     length++;
-//   return length;
-// }
+    // function sortArray(arr) {
+    //     let len = arr.length;
+    //     for(let i = 0; i<len; i++){
+    //         for(let j = i+1; j<len; j++){
+    //             if(arr[i].length > arr[j].length){
+    //                 let temp = arr[i];
+    //                 arr[i] = arr[j];
+    //                 arr[j] = temp;
+    //             }
+    //         }
+    //     }
+    //     return arr;
+    // }
 
-let students = $.get( "http://localhost:2105/students", ( res ) {
-  $( "#studs" ).html( res );
-  alert( data );
-});
-  // alert(JSON.stringify(g));
+    // let array = ["aap", "kiekeboe", "blabla", "b"];
+    //  document.getElementById("holder").innerHTML=sortArray(array);
 
-let sorted = new Sequencer();
-var array = ["aap", "kiekeboe", "blabla", "b","xx","test"];
-document.getElementById("print").innerHTML = sorted.sortArray(array);
 </script>
-<div class="print"></div>
+
 </body>
 </html>

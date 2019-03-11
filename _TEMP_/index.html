@@ -6,10 +6,10 @@
         <title>Puntentabel</title>
     </head>
     <body>
-
+        <div id="fullhead"><p></p></div>
         
     <div id="test">
-            
+
     </div>
 
     
@@ -17,6 +17,7 @@
     </body>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script>
+    let procent = 100;
     let vakId = 0;
     let selected = "";
     let myObj;
@@ -28,6 +29,23 @@
     let array_fouten = Array();
     let array_students = Array();
     let checked = "";
+    function getProcent(){
+        let xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+            // Typical action to be performed when the document is ready:
+                let x = JSON.parse(this.responseText);
+                myObj = JSON.parse(x);
+                for (check in myObj) {
+                    procent = myObj[check].procent;
+                }
+            }
+        }
+        xhttp.open("GET", "http://localhost:2100/procent", true);
+        xhttp.send();
+    }
+    
+    getProcent();
     function tablechecks(){
         let xhttp = new XMLHttpRequest();
         xhttp.onreadystatechange = function() {
@@ -53,7 +71,6 @@
                 myObj = JSON.parse(x);
                 for (vak in myObj) {
                     array_vakken.push(myObj[vak]);
-                    
                 }
                 tableFouten();
             }
@@ -71,6 +88,7 @@
                 for (fout in myObj) {
                     array_fouten.push(myObj[fout]);
                 }
+                
                 tableStudenten(callbackFouten);
             }
         }
@@ -96,33 +114,32 @@
     function callbackFouten(x){
         let table = 
         '<table id="puntentabel">'+
+        '<thead>'+
+        '<th id="cornerLU">'+
         '<button onclick="addCol()" id="addcol">add column</button>'+
         '<button onclick="remCol()" id="remcol">remove column</button>'+
-        '<button onclick="addRow()" id="addrow">add student</button>'+
-        '<thead>'+
-        '<td id="cornerLU">'+
         '<div class="custom-select">'+
         '<select id="rounded">'+
         '<option value="0">Select Course</option>';
         for (i=0;i<array_vakken.length;i++){
             if (i+1==vakId){ selected = "selected"; }
-            table += '<option '+ selected +' value="'+ (array_vakken[i].vak_id) +'">'+ array_vakken[i].vak_naam +'</option>';
+            table += '<option '+ selected +' value="'+ array_vakken[i].vak_id +'">'+ array_vakken[i].vak_naam +'</option>';
             selected = "";
         }
         table += 
                 '</select>'+
                 '</div>'+
-                '</td>';
+                '</th>';
         for (i=0;i<array_fouten.length;i++){
-            table += '<td class="fouten"><div class="rotate"><p>'+ array_fouten[i].fou_omschrijving +'</p></div></td>';
+            table += '<th class="fouten"><div class="rotate"><p>'+ array_fouten[i].fou_omschrijving +'</p></div></th>';
         }
         table += 
-                '<td id="result">Result</td>'+
-                '</thead>';
+                '<th id="result">Result</th>'+
+                '</thead><tbody>';
         for (i=0;i<array_students.length;i++){
             table += 
                 '<tr class="student"><td>'+ array_students[i].stu_voornaam +' '+ array_students[i].stu_naam +'</td>';
-            for (ii=0; ii<array_fouten.length; ii++){
+            for (ii=0;ii<array_fouten.length; ii++){
                 for (iii=0; iii<array_checks.length;iii++){
                     let foutNaam = array_checks[iii].fou_omschrijving;
                     let vakNaam = array_checks[iii].vak_naam;
@@ -142,9 +159,9 @@
                 table += '<td><input '+ checked +' class="checkbox" type="checkbox" name="'+ array_students[i].stu_voornaam + '-' + array_students[i].stu_naam +'" value="'+ array_fouten[ii].fou_omschrijving +'"></td>';
                 checked = "";
             }
-            table += '<td id="'+ array_students[i].stu_voornaam + array_students[i].stu_naam + '"></td></tr>';
+            table += '<td id="'+ array_students[i].stu_voornaam + array_students[i].stu_naam + '">100%</td></tr>';
         }
-        table += '</table>';
+        table += '</tbody></table>';
         document.getElementById("test").innerHTML = table;
         table = "";
         calcScore();        
@@ -159,6 +176,7 @@
         // $("#Student1").text("100%");
         let myobj = { vak: vakId };
         let myjson = JSON.stringify(myobj);
+        
         $.ajax({
             url: "/score",
             type: "POST",
@@ -167,56 +185,94 @@
             success: (result, status)=>{
                 // console.dir("result: " + result + " status: " + status);
                 let rresult = JSON.stringify(result);
-                for (i=0;i<result.length;i++){
-                    console.log(result[i]);
-                    let vnaam = result[i].stu_voornaam;
-                    let anaam = result[i].stu_naam;
-                    let score = result[i].minpunten;
-                    $("#"+vnaam+anaam).text(score);
-                }
+                // console.log(rresult.lenght);
+                // if (result.lenght > 0){
+                    // console.log(typeof(result));
+                    for (i=0;i<result.length;i++){
+                        let vnaam = result[i].stu_voornaam;
+                        let anaam = result[i].stu_naam;
+                        let score = result[i].minpunten;
+                        let procentscore = 100 - procent * score;
+                        $("#"+vnaam+anaam).text(parseInt(procentscore) + "%");
+                    }
+                // }
             },
             error: (error)=>{
                 
                 callData(); // reconstruct table after updating db
             } 
         }) // end $.ajax
-    }
-        
+    } // end function callscore
     function callData(){
         tablechecks();
     }
     callData();
+    // -------------------------------------------------
     $(document).on("change", "#rounded", function(){
         vakId = $(this).val();
         callData();
     })
+    $(document).on("mouseenter", ".rotate p", function(){
+        let fullText = $(this).text();
+        $("#fullhead p").text(fullText);
+    })
+    $(document).on("mouseleave", ".rotate p", function(){
+        $("#fullhead p").text("");
+    })
         
+    // ----------------------------------------------------
     function remCol(){
-        let fout = prompt("Geef een foutnaam die je wilt verwijderen.");
-        let myobj = { remove: fout };
-        let myjson = JSON.stringify(myobj);
-        $.ajax({
-            url: "/sql",
-            type: "POST",
-            dataType: "JSON",
-            data: myjson,
-            success: (result, status)=>{
-                console.dir("result: " + result + " status: " + status)
-            },
-            error: (error)=>{
-                let test = JSON.stringify(error);
-                console.dir("error: " + test);
-                callData(); // reconstruct table after updating db
-            } 
-        }) // end $.ajax
-    } // end function remCol
+        alert("Klik op de fout die u wilt verwijderen.");
+        $(".fouten").css({ "background-color": "red"});
+        $(".fouten p ").css("cursor", "pointer");
+        $(".fouten p").on("click", (event)=>{
+            let fout = $(event.currentTarget).text();
+            let myobj = { remove: fout };
+            let myjson = JSON.stringify(myobj);
+            $.ajax({
+                url: "/rem",
+                type: "POST",
+                dataType: "JSON",
+                data: myjson,
+                success: (result, status)=>{
+                    console.dir("result: " + result + " status: " + status)
+                },
+                error: (error)=>{
+                    let test = JSON.stringify(error);
+                    if (error.responseText != ""){
+                        alert(error.responseText);
+                    } else {
+                        console.dir("error: " + test);
+                        getProcent();
+                        callData(); // reconstruct table after updating db
+                    }
+                } 
+            }) // end $.ajax
+        }) // end function remCol
+    }
+       
         
     function addCol(){
         let fout = prompt("Geef een nieuwe foutnaam.");
-        let myobj = { foutnaam: fout };
+        if (fout == ""){
+            alert("Geef een geldige foutnaam op.");
+            return;
+        }
+        if (fout == null){
+            return;
+        }
+        let min = prompt("Geef het aantal strafpunten hiervoor.");
+        if (min == ""){
+            alert("Geef een geldig minpunt op.");
+            return;
+        }
+        if (min == null){
+            return;
+        }
+        let myobj = { foutnaam: fout, minpunten: min };
         let myjson = JSON.stringify(myobj);
         $.ajax({
-            url: "/sql",
+            url: "/add",
             type: "POST",
             dataType: "JSON",
             data: myjson,
@@ -229,33 +285,11 @@
                 if (error.responseText != ""){
                     alert(error.responseText);
                 }
+                getProcent();
                 callData(); // reconstruct table after updating db
             } 
         }) // end $.ajax
     } // end function add col
-
-    function addRow() {
-        let firstName = prompt("Voornaam student:");
-        let lastName = prompt("Naam:");
-        let myObjFirst = { stuVnaam: firstName };
-        let myObjLast = { stuAnaam: lastName };
-        console.log(myObjFirst);
-        console.log(myObjLast);
-        let myjsonFirst = JSON.stringify(myObjFirst);
-        let myjsonLast = JSON.stringify(myObjLast);
-        console.log(myjsonFirst);
-        var xhttp = new XMLHttpRequest();
-        console.log(xhttp);
-        xhttp.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-            console.log(this.responseText);
-            
-            }
-        };
-        xhttp.open("GET", "http://localhost:2100/addStudent", true);
-        xhttp.send();
-    }
-
     $(document).on("click", "input[type=checkbox]", function(){
         if (this.checked){
             let name = this.name;
@@ -302,5 +336,6 @@
             calcScore();
         }
     }); // end function input onclick
+    
     </script>
 </html>

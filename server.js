@@ -1,9 +1,9 @@
 const X = require('express');
 const APP = X();
 const PORT = 2100;
-
 let bodyParser = require('body-parser');
 const mysql = require('mysql');
+const CORS = require('cors');
 
 
 APP.use('/project1', X.static(__dirname + '/_TEMP_/'));
@@ -18,6 +18,7 @@ let con = mysql.createConnection({
 	user: "root",
 	password: "mysql",
 	database: "grade_rating"
+
 });
 
 process.on('uncaughtException', function (err) {
@@ -51,78 +52,76 @@ function getDatabase(){
 		if (err) {throw err;}
 		outputchecks = JSON.stringify(result);
 	})
-	// con.query("SELECT stu_voornaam, stu_naam, count(fou_minpunten) AS minpunten "+
-	// "FROM stu_vak_fou "+
-	// "JOIN studenten s on stu_vak_fou.fk_stu_id = s.stu_id "+
-	// "JOIN fouten f on stu_vak_fou.fk_fou_id = f.fou_id "+
-	// "GROUP BY stu_naam" , (err, result, fields) => {
-	// 	if (err) {throw err;}
-	// 	outputscore = JSON.stringify(result);
-	// });
+	con.query("SELECT (100 / sum(fou_minpunten)) AS procent FROM fouten" , (err, result, fields) => {
+		if (err) {throw err;}
+		outputprocent = JSON.stringify(result);
+	});
 
-	APP.get("/students", (req,res)=>{res.send([outputstudenten])});
-	APP.get("/fouten", (req,res)=>{res.send([outputfouten])});
-	APP.get("/vakken", (req,res)=>{res.send([outputvakken])});
-	APP.get("/checks", (req,res)=>{res.send([outputchecks])});
-	// APP.get("/score", (req,res)=>{res.send([outputscore])});
+	APP.get("/students",CORS(), (req,res)=>{res.send([outputstudenten])});
+	APP.get("/fouten",CORS(), (req,res)=>{res.send([outputfouten])});
+	APP.get("/vakken",CORS(), (req,res)=>{res.send([outputvakken])});
+	APP.get("/checks",CORS(), (req,res)=>{res.send([outputchecks])});
+	APP.get("/procent", (req,res)=>{res.send([outputprocent])});
 
 }; // end getDatabase
 
 getDatabase();
 
-
+APP.get("/dataforangular",CORS(), (req,res)=>{res.send(["10","100","1000","10000"])});
 
  var urlencodedParser = bodyParser.urlencoded({ extended: true });
- APP.post("/sql",urlencodedParser, (req, res) => { 
+ APP.post("/add",urlencodedParser, (req, res) => { 
+	if (req.method === 'POST') {
+		let result = req.body;
+		console.dir(result);
+		for (let key  in result){
+			let txt = JSON.parse(key);
+			console.dir(txt);
+			let foutnaam = txt.foutnaam;
+			let minpunten = txt.minpunten;
+			//console.log(foutnaam + minpunten);
+			var sql = "INSERT INTO fouten (fou_omschrijving, fou_minpunten) VALUES ( '" + foutnaam + "', '" + minpunten + "')";
+			console.log(sql);
+			con.query(sql, function (err, result) {
+				if (err) {
+					res.end("Deze foutnaam bestaat al!");
+					// throw err;
+				}
+				else{
+					let test = JSON.stringify(result);
+					console.dir("1 record inserted" + test);
+					getDatabase();
+					res.end();
+				}
+			})
+		}
+	}
+}); // end add col
+var urlencodedParser = bodyParser.urlencoded({ extended: true });
+APP.post("/rem",urlencodedParser, (req, res) => { 
 	if (req.method === 'POST') {
 		let result = req.body;
 		for (let key  in result){
-      let txt = JSON.parse(key);
-			for (let x in txt){
-				if (x == "foutnaam"){
-					txt = txt.foutnaam;
-						console.log("Connected!");
-						var sql = "INSERT INTO fouten (fou_omschrijving, fou_minpunten) VALUES ( '"+txt+"', '1')";
-						console.log(sql);
-						con.query(sql, function (err, result) {
-							if (err) {
-								res.end("Deze foutnaam bestaat al!");
-								// throw err;
-							}
-							else{
-								let test = JSON.stringify(result);
-								console.dir("1 record inserted" + test);
-								getDatabase();
-								res.end();
-							}
-						});
-				} // end if name = foutnaam
-				else if (x == "remove"){
-					txt = txt.remove;
-						var sql = "DELETE FROM stu_vak_fou "+
-						"WHERE fk_fou_id = (SELECT fou_id FROM fouten WHERE fou_omschrijving = '"+ txt +"')";
-						
-						con.query(sql, function (err, result) {
-							if (err) throw err;
-							else{
-							}
-						});
-						var sql = "DELETE FROM fouten WHERE fou_omschrijving = '"+ txt +"'";
+			console.log(JSON.stringify(result));
+			let txt = JSON.parse(key);
+			let foutnaam = txt.remove;
+			console.log(foutnaam);
+			
+			var sql = "DELETE FROM fouten WHERE fou_omschrijving = '"+ foutnaam +"'";
 
-						con.query(sql, function (err, result) {
-							if (err) throw err;
-							else{
-							let test = JSON.stringify(result);
-							console.dir("1 record deleted" + test);
-							getDatabase();
-							res.end();
-							}
-						});
-        } // end if name = remove
-			}
+			con.query(sql, function (err, result) {
+				if (err) {
+					res.end("Verwijder eerst alle vinkjes uit deze kolom. En dat voor alle vakken.");
+				} else{
+					let test = JSON.stringify(result);
+					console.dir("1 record deleted" + test);
+					getDatabase();
+					res.end();
+				}
+			});
 		}
 	}
-}); // end post /sql
+}); // end rem col
 APP.use(bodyParser.json()); // parse application json
 APP.use(bodyParser.urlencoded({extended: true}));
 APP.post("/check",urlencodedParser, (req, res)=>{
@@ -182,10 +181,9 @@ APP.post("/check",urlencodedParser, (req, res)=>{
 APP.use(bodyParser.json()); // parse application json
 APP.use(bodyParser.urlencoded({extended: true}));
 APP.post("/score",urlencodedParser, (req, res)=>{
-	// let input = JSON.stringify(res.body);
 	for (x in req.body){
 		let parsed = JSON.parse(x);
-		let sql = "SELECT stu_voornaam, stu_naam, count(fou_minpunten) AS minpunten "+
+		let sql = "SELECT stu_voornaam, stu_naam, sum(fou_minpunten) AS minpunten "+
 		"FROM stu_vak_fou "+
 		"JOIN studenten s on stu_vak_fou.fk_stu_id = s.stu_id "+
 		"JOIN fouten f on stu_vak_fou.fk_fou_id = f.fou_id "+
@@ -202,9 +200,3 @@ APP.post("/score",urlencodedParser, (req, res)=>{
 		});
 	}
 }); // end request score
-
-APP.post('/addStudent', (req,res) => {
-  var student = req.body;
-  console.log(student);
-  //con.query("INSERT INTO studenten (stu_voornaam,stu_naam) VALUES (" + student + ",)")
-});
