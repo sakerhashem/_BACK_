@@ -70,7 +70,7 @@ getDatabase();
 APP.get("/dataforangular",CORS(), (req,res)=>{res.send(["10","100","1000","10000"])});
 
  var urlencodedParser = bodyParser.urlencoded({ extended: true });
- APP.post("/add",urlencodedParser, (req, res) => { 
+ APP.post("/add",CORS(),  (req, res) => { 
 	if (req.method === 'POST') {
 		let result = req.body;
 		console.dir(result);
@@ -122,8 +122,6 @@ APP.post("/rem",urlencodedParser, (req, res) => {
 		}
 	}
 }); // end rem col
-APP.use(bodyParser.json()); // parse application json
-APP.use(bodyParser.urlencoded({extended: true}));
 APP.post("/check",urlencodedParser, (req, res)=>{
 	// let input = JSON.stringify(res.body);
 	for (x in req.body){
@@ -178,8 +176,8 @@ APP.post("/check",urlencodedParser, (req, res)=>{
 	
 }); // end checkbox functie
 
-APP.use(bodyParser.json()); // parse application json
-APP.use(bodyParser.urlencoded({extended: true}));
+//APP.use(bodyParser.json()); // parse application json
+//APP.use(bodyParser.urlencoded({extended: true}));
 APP.post("/score",urlencodedParser, (req, res)=>{
 	for (x in req.body){
 		let parsed = JSON.parse(x);
