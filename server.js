@@ -69,18 +69,12 @@ getDatabase();
 
 APP.get("/dataforangular",CORS(), (req,res)=>{res.send(["10","100","1000","10000"])});
 
- var urlencodedParser = bodyParser.urlencoded({ extended: true });
- APP.post("/add",CORS(),  (req, res) => { 
-	if (req.method === 'POST') {
-		let result = req.body;
-		console.dir(result);
-		for (let key  in result){
-			let txt = JSON.parse(key);
-			console.dir(txt);
-			let foutnaam = txt.foutnaam;
-			let minpunten = txt.minpunten;
-			//console.log(foutnaam + minpunten);
-			var sql = "INSERT INTO fouten (fou_omschrijving, fou_minpunten) VALUES ( '" + foutnaam + "', '" + minpunten + "')";
+
+ //var urlencodedParser = bodyParser.urlencoded({ extended: false });
+ APP.post("/add",CORS(),bodyParser.text(), (req, res) => { 
+		let result = JSON.parse(req.body);
+		console.dir(result.foutnaam);
+			var sql = "INSERT INTO fouten (fou_omschrijving, fou_minpunten) VALUES ( '" + result.foutnaam + "', '" + result.minpunten + "')";
 			console.log(sql);
 			con.query(sql, function (err, result) {
 				if (err) {
@@ -94,35 +88,31 @@ APP.get("/dataforangular",CORS(), (req,res)=>{res.send(["10","100","1000","10000
 					res.end();
 				}
 			})
-		}
-	}
+		
+	
 }); // end add col
-var urlencodedParser = bodyParser.urlencoded({ extended: true });
-APP.post("/rem",urlencodedParser, (req, res) => { 
-	if (req.method === 'POST') {
-		let result = req.body;
-		for (let key  in result){
-			console.log(JSON.stringify(result));
-			let txt = JSON.parse(key);
-			let foutnaam = txt.remove;
-			console.log(foutnaam);
-			
-			var sql = "DELETE FROM fouten WHERE fou_omschrijving = '"+ foutnaam +"'";
 
-			con.query(sql, function (err, result) {
-				if (err) {
-					res.end("Verwijder eerst alle vinkjes uit deze kolom. En dat voor alle vakken.");
-				} else{
-					let test = JSON.stringify(result);
-					console.dir("1 record deleted" + test);
-					getDatabase();
-					res.end();
-				}
-			});
-		}
-	}
+//var urlencodedParser = bodyParser.urlencoded({ extended: true });
+APP.post("/rem",CORS(), bodyParser.text(), (req, res) => { 
+	let result = JSON.parse(req.body);
+	console.dir(result.foutCol);
+	var sql = "DELETE FROM fouten WHERE fou_omschrijving = '"+ result.foutCol +"'";
+	console.log(sql);
+	con.query(sql, function (err, result) {
+		if (err) {
+			res.end("Verwijder eerst alle vinkjes uit deze kolom. En dat voor alle vakken.");
+		} else{
+				let test = JSON.stringify(result);
+				console.dir("1 record deleted" + test);
+				getDatabase();
+				res.end();
+			}
+});
+		
+	
 }); // end rem col
-APP.post("/check",urlencodedParser, (req, res)=>{
+
+APP.post("/checks",urlencodedParser, (req, res)=>{
 	// let input = JSON.stringify(res.body);
 	for (x in req.body){
 		let parsed = JSON.parse(x);
@@ -136,9 +126,9 @@ APP.post("/check",urlencodedParser, (req, res)=>{
 		console.log(checked);
 		if (checked == "true"){
 			let sql = "INSERT INTO stu_vak_fou (fk_stu_id, fk_vak_id, fk_fou_id)"+
-			"VALUES ((SELECT stu_id FROM studenten WHERE stu_voornaam = '"+ fname +"' AND stu_naam = '"+ lname +"'),"+
-				""+vak+","+
-				"(SELECT fou_id FROM fouten WHERE fou_omschrijving = '"+ fout +"'))";
+			" VALUES ((SELECT stu_id FROM studenten WHERE stu_voornaam ='"+ fname +"' AND stu_naam ='"+ lname +"'),"+
+				""+ vak + "," +
+				" (SELECT fou_id FROM fouten WHERE fou_omschrijving ='"+ fout +"'))";
 				console.log(sql);
 			con.query(sql, function (err, result) {
 				if (err){
