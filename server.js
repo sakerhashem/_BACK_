@@ -1,6 +1,7 @@
 const X = require('express');
 const APP = X();
 const PORT = 2100;
+const ROUTES = require('./routes.js');
 let bodyParser = require('body-parser');
 const mysql = require('mysql');
 const CORS = require('cors');
@@ -8,6 +9,7 @@ const CORS = require('cors');
 
 APP.use('/project1', X.static(__dirname + '/_TEMP_/'));
 // APP.use('/project2', X.static(__dirname + '/_P2_/'));
+//APP.use('/',ROUTES);
 
 APP.listen(PORT, () => {
   	console.log(`\r\nNODE ::: I started my back end server on port ${PORT}.\r\n`);
@@ -35,6 +37,7 @@ function getDatabase(){
 	con.query("select * from studenten",  (err, result, fields) =>{
 	if (err) {throw err;}
 		outputstudenten = JSON.stringify(result);
+		//console.log(outputstudenten+'test');
 	});
 	con.query("select * from fouten",  (err, result, fields) =>{
 	if (err) {throw err;}
@@ -57,15 +60,17 @@ function getDatabase(){
 		outputprocent = JSON.stringify(result);
 	});
 
-	APP.get("/students",CORS(), (req,res)=>{res.send([outputstudenten])});
-	APP.get("/fouten",CORS(), (req,res)=>{res.send([outputfouten])});
-	APP.get("/vakken",CORS(), (req,res)=>{res.send([outputvakken])});
-	APP.get("/checks",CORS(), (req,res)=>{res.send([outputchecks])});
-	APP.get("/procent", (req,res)=>{res.send([outputprocent])});
-
+	
 }; // end getDatabase
 
 getDatabase();
+
+APP.get("/students",CORS(), (req,res)=>{res.send([outputstudenten])});
+APP.get("/fouten",CORS(), (req,res)=>{res.send([outputfouten])});
+APP.get("/vakken",CORS(), (req,res)=>{res.send([outputvakken])});
+APP.get("/checks",CORS(), (req,res)=>{res.send([outputchecks])});
+APP.get("/procent", (req,res)=>{res.send([outputprocent])});
+
 
 APP.get("/dataforangular",CORS(), (req,res)=>{res.send(["10","100","1000","10000"])});
 
@@ -76,16 +81,21 @@ APP.get("/dataforangular",CORS(), (req,res)=>{res.send(["10","100","1000","10000
 		console.dir(result.foutnaam);
 			var sql = "INSERT INTO fouten (fou_omschrijving, fou_minpunten) VALUES ( '" + result.foutnaam + "', '" + result.minpunten + "')";
 			console.log(sql);
-			con.query(sql, function (err, result) {
+			con.query(sql, function (err, reslt) {
 				if (err) {
 					res.end("Deze foutnaam bestaat al!");
 					// throw err;
 				}
 				else{
-					let test = JSON.stringify(result);
+					let test = JSON.stringify(reslt);
 					console.dir("1 record inserted" + test);
-					getDatabase();
-					res.end();
+					let out= {
+						fou_minpunten: result.minpunten,
+						fou_omschrijving: result.foutnaam
+					}
+				
+					console.log(out);
+					res.send(out);
 				}
 			})
 		
@@ -103,9 +113,10 @@ APP.post("/rem",CORS(), bodyParser.text(), (req, res) => {
 			res.end("Verwijder eerst alle vinkjes uit deze kolom. En dat voor alle vakken.");
 		} else{
 				let test = JSON.stringify(result);
-				console.dir("1 record deleted" + test);
+				//console.dir("1 record deleted" + test);
+				console.log(foutCol);
 				getDatabase();
-				res.end();
+				res.send(foutCol);
 			}
 });
 		
